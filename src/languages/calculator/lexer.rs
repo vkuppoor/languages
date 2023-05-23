@@ -1,4 +1,4 @@
-use crate::languages::calculator::Token;
+use super::Token;
 use regex::Regex;
 
 pub fn lexer(input: &String, pos: usize) -> Vec<Token> {
@@ -44,7 +44,7 @@ pub fn lexer(input: &String, pos: usize) -> Vec<Token> {
                     match matched_str.parse::<i32>() {
                         Ok(number) => {
                             let mut more_tokens = lexer(input, pos + matched_str.len());
-                            more_tokens.insert(0, Token::TokNumber(number));
+                            more_tokens.insert(0, Token::TokInt(number));
                             more_tokens
                         }
                         Err(_) => panic!("invalid number token"),
@@ -73,11 +73,11 @@ mod tests {
         assert_eq!(
             lexer(&String::from("5 4 3 11234 9"), 0),
             vec![
-                Token::TokNumber(5),
-                Token::TokNumber(4),
-                Token::TokNumber(3),
-                Token::TokNumber(11234),
-                Token::TokNumber(9)
+                Token::TokInt(5),
+                Token::TokInt(4),
+                Token::TokInt(3),
+                Token::TokInt(11234),
+                Token::TokInt(9)
             ]
         );
     }
@@ -112,14 +112,14 @@ mod tests {
             lexer(&String::from("+ 5 * 4 / 30 - 6 3"), 0),
             vec![
                 Token::TokPlus,
-                Token::TokNumber(5),
+                Token::TokInt(5),
                 Token::TokMult,
-                Token::TokNumber(4),
+                Token::TokInt(4),
                 Token::TokDiv,
-                Token::TokNumber(30),
+                Token::TokInt(30),
                 Token::TokSub,
-                Token::TokNumber(6),
-                Token::TokNumber(3)
+                Token::TokInt(6),
+                Token::TokInt(3)
             ]
         );
     }

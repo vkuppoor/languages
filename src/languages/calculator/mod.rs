@@ -1,12 +1,21 @@
 // pub mod interpreter;
 pub mod lexer;
-// pub mod parser;
+pub mod parser;
 
-#[derive(PartialEq, Debug)]
-pub enum Token {
+#[derive(PartialEq, Debug, Clone)]
+pub enum Tok {
     TokPlus,
     TokSub,
     TokMult,
     TokDiv,
-    TokNumber(i32),
+    TokInt(i32),
+}
+
+#[derive(PartialEq, Debug)]
+pub enum Expr {
+    Plus((Box<Expr>, Box<Expr>)),
+    Sub((Box<Expr>, Box<Expr>)),
+    Mult((Box<Expr>, Box<Expr>)),
+    Div((Box<Expr>, Box<Expr>)),
+    Int(i32),
 }
