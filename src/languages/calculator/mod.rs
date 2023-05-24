@@ -9,6 +9,7 @@ pub enum Tok {
     TokMult,
     TokDiv,
     TokInt(i32),
+    TokEOF,
 }
 
 #[derive(PartialEq, Debug)]
