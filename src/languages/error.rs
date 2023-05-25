@@ -9,7 +9,7 @@ pub struct Error<T> {
 }
 
 #[derive(Debug, Clone)]
-pub enum ErrorKind<T> {
+enum ErrorKind<T> {
     InvalidInput {
         input: T,
     },
@@ -60,5 +60,44 @@ impl<T: fmt::Debug> fmt::Display for ErrorKind<T> {
 impl<T: fmt::Debug> fmt::Debug for Error<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self.kind)
+    }
+}
+
+impl<T: fmt::Debug + Clone> Error<T> {
+    pub fn invalid_input(input: T) -> Self {
+        Self {
+            kind: ErrorKind::InvalidInput { input },
+        }
+    }
+
+    pub fn mismatched_token(expected_tok: T, tok_list: Vec<T>, actual_tok: T) -> Self {
+        Self {
+            kind: ErrorKind::MismatchedToken {
+                expected_tok,
+                tok_list,
+                actual_tok,
+            },
+        }
+    }
+
+    pub fn tokens_empty() -> Self {
+        Self {
+            kind: ErrorKind::TokensEmpty,
+        }
+    }
+
+    pub fn tokens_not_empty(tok_list: Vec<T>) -> Self {
+        Self {
+            kind: ErrorKind::TokensNotEmpty { tok_list },
+        }
+    }
+
+    pub fn production_rule_failure(prod_rule: String, tok_list: Vec<T>) -> Self {
+        Self {
+            kind: ErrorKind::ProductionRuleFailure {
+                prod_rule,
+                tok_list,
+            },
+        }
     }
 }
