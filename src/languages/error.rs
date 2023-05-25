@@ -1,5 +1,8 @@
+use core::result;
 use std::error::Error as StdError;
 use std::fmt;
+
+pub type Result<T, E> = result::Result<T, Error<E>>;
 
 pub struct Error<T> {
     kind: ErrorKind<T>,
