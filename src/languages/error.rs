@@ -33,7 +33,7 @@ impl<T: fmt::Debug> StdError for ErrorKind<T> {}
 impl<T: fmt::Debug> fmt::Display for ErrorKind<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ErrorKind::InvalidInput { input } => write!(f, "invali input: {:?}", input),
+            ErrorKind::InvalidInput { input } => write!(f, "invalid input: {:?}", input),
             ErrorKind::MismatchedToken {
                 expected_tok,
                 tok_list,
