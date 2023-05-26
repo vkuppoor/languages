@@ -1,13 +1,12 @@
 use super::{Expr, Tok};
 use crate::languages::error::{Error, Result};
-use core::panic;
 
 /** Grammar:
 E -> + N E | - N E | * N E | / N E | N
 N -> -2,147,483,648 | -2,147,483,647 | -2,147,483,646 | ... | 2,147,483,647
 */
-pub fn parser(toks: Vec<Tok>) -> Result<Expr, Tok> {
-    let (toks, e) = parse_e(toks);
+pub fn parser(toks: Vec<Tok>) -> Result<Expr, Vec<Tok>> {
+    let (toks, e) = parse_e(toks)?;
     if !toks.is_empty() {
         Err(Error::tokens_not_empty(toks))
     } else {
@@ -15,37 +14,41 @@ pub fn parser(toks: Vec<Tok>) -> Result<Expr, Tok> {
     }
 }
 
-fn parse_e(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), Tok> {
-    match toks.get(0).unwrap() {
-        Tok::TokAdd => {
-            let toks = match_token(&toks, Tok::TokAdd);
-            let (toks, e1) = parse_e(toks);
-            let (toks, e2) = parse_e(toks);
-            Ok((toks, Expr::Add((Box::new(e1), Box::new(e2)))))
+fn parse_e(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), Vec<Tok>> {
+    if let Some(tok_head) = toks.get(0) {
+        match tok_head {
+            Tok::TokAdd => {
+                let toks = match_token(&toks, Tok::TokAdd)?;
+                let (toks, e1) = parse_e(toks)?;
+                let (toks, e2) = parse_e(toks)?;
+                Ok((toks, Expr::Add((Box::new(e1), Box::new(e2)))))
+            }
+            Tok::TokSub => {
+                let toks = match_token(&toks, Tok::TokSub)?;
+                let (toks, e1) = parse_e(toks)?;
+                let (toks, e2) = parse_e(toks)?;
+                Ok((toks, Expr::Sub((Box::new(e1), Box::new(e2)))))
+            }
+            Tok::TokMult => {
+                let toks = match_token(&toks, Tok::TokMult)?;
+                let (toks, e1) = parse_e(toks)?;
+                let (toks, e2) = parse_e(toks)?;
+                Ok((toks, Expr::Mult((Box::new(e1), Box::new(e2)))))
+            }
+            Tok::TokDiv => {
+                let toks = match_token(&toks, Tok::TokDiv)?;
+                let (toks, e1) = parse_e(toks)?;
+                let (toks, e2) = parse_e(toks)?;
+                Ok((toks, Expr::Div((Box::new(e1), Box::new(e2)))))
+            }
+            Tok::TokInt(_) => Ok(parse_n(toks)),
         }
-        Tok::TokSub => {
-            let toks = match_token(&toks, Tok::TokSub);
-            let (toks, e1) = parse_e(toks);
-            let (toks, e2) = parse_e(toks);
-            Ok((toks, Expr::Sub((Box::new(e1), Box::new(e2)))))
-        }
-        Tok::TokMult => {
-            let toks = match_token(&toks, Tok::TokMult);
-            let (toks, e1) = parse_e(toks);
-            let (toks, e2) = parse_e(toks);
-            Ok((toks, Expr::Mult((Box::new(e1), Box::new(e2)))))
-        }
-        Tok::TokDiv => {
-            let toks = match_token(&toks, Tok::TokDiv);
-            let (toks, e1) = parse_e(toks);
-            let (toks, e2) = parse_e(toks);
-            Ok((toks, Expr::Div((Box::new(e1), Box::new(e2)))))
-        }
-        Tok::TokInt(_) => Ok(parse_n(toks)),
+    } else {
+        Err(Error::invalid_input(toks))
     }
 }
 
-fn parse_n(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), tok> {
+fn parse_n(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), Vec<Tok>> {
     match toks.get(0).unwrap() {
         Tok::TokInt(i) => {
             let toks = match_token(&toks, Tok::TokInt(*i));
@@ -55,7 +58,7 @@ fn parse_n(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), tok> {
     }
 }
 
-fn match_token(toks: &Vec<Tok>, tok: Tok) -> Result<Vec<Tok>, Tok> {
+fn match_token(toks: &Vec<Tok>, tok: Tok) -> Result<Vec<Tok>, Vec<Tok>> {
     match toks.split_first() {
         None => Err(Error::invalid_input(tok)),
         Some((h, t)) if *h == tok => Ok(t.to_vec()),
