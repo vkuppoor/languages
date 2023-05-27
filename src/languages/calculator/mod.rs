@@ -2,7 +2,7 @@ pub mod interpreter;
 pub mod lexer;
 pub mod parser;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Tok {
     TokAdd,
     TokSub,

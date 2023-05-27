@@ -1,11 +1,11 @@
 use super::{Expr, Tok};
-use crate::languages::error::{Error, Result};
+use crate::languages::error::parser::{Error, Result};
 
 /** Grammar:
 E -> + N E | - N E | * N E | / N E | N
 N -> -2,147,483,648 | -2,147,483,647 | -2,147,483,646 | ... | 2,147,483,647
 */
-pub fn parser(toks: Vec<Tok>) -> Result<Expr, Vec<Tok>> {
+pub fn parser(toks: Vec<Tok>) -> Result<Expr, Tok, Vec<Tok>> {
     let (toks, e) = parse_e(toks)?;
     if !toks.is_empty() {
         Err(Error::tokens_not_empty(toks))
@@ -14,7 +14,7 @@ pub fn parser(toks: Vec<Tok>) -> Result<Expr, Vec<Tok>> {
     }
 }
 
-fn parse_e(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), Vec<Tok>> {
+fn parse_e(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), Tok, Vec<Tok>> {
     if let Some(tok_head) = toks.get(0) {
         match tok_head {
             Tok::TokAdd => {
@@ -41,28 +41,28 @@ fn parse_e(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), Vec<Tok>> {
                 let (toks, e2) = parse_e(toks)?;
                 Ok((toks, Expr::Div((Box::new(e1), Box::new(e2)))))
             }
-            Tok::TokInt(_) => Ok(parse_n(toks)),
+            Tok::TokInt(_) => Ok(parse_n(toks)?),
         }
     } else {
-        Err(Error::invalid_input(toks))
+        Err(Error::tokens_empty())
     }
 }
 
-fn parse_n(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), Vec<Tok>> {
+fn parse_n(toks: Vec<Tok>) -> Result<(Vec<Tok>, Expr), Tok, Vec<Tok>> {
     match toks.get(0).unwrap() {
         Tok::TokInt(i) => {
-            let toks = match_token(&toks, Tok::TokInt(*i));
+            let toks = match_token(&toks, Tok::TokInt(*i))?;
             Ok((toks, Expr::Int(*i)))
         }
         _ => Err(Error::production_rule_failure(String::from("N rule"), toks)),
     }
 }
 
-fn match_token(toks: &Vec<Tok>, tok: Tok) -> Result<Vec<Tok>, Vec<Tok>> {
+fn match_token(toks: &[Tok], tok: Tok) -> Result<Vec<Tok>, Tok, Vec<Tok>> {
     match toks.split_first() {
         None => Err(Error::invalid_input(tok)),
         Some((h, t)) if *h == tok => Ok(t.to_vec()),
-        Some((h, _)) => Err(Error::mismatched_tokens(tok, toks, *h)),
+        Some((h, _)) => Err(Error::mismatched_token(tok, toks.to_vec(), *h)),
     }
 }
 
@@ -72,20 +72,19 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic]
     fn nothing() {
-        parser(lexer::lexer(&String::from(""), 0));
+        assert!(parser(lexer::lexer(&String::from(""), 0)).is_err());
     }
 
     #[test]
     fn invalid_order() {
-        parser(lexer::lexer(&String::from("5 + 8 + 9 8"), 0));
+        assert!(parser(lexer::lexer(&String::from("5 + 8 + 9 8"), 0)).is_err());
     }
 
     #[test]
     fn add_basic() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("+ 5 4"), 0)),
+            parser(lexer::lexer(&String::from("+ 5 4"), 0)).unwrap(),
             Expr::Add((Box::new(Expr::Int(5)), Box::new(Expr::Int(4))))
         )
     }
@@ -93,7 +92,7 @@ mod tests {
     #[test]
     fn add_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("+ 5 + 4 3"), 0)),
+            parser(lexer::lexer(&String::from("+ 5 + 4 3"), 0)).unwrap(),
             Expr::Add((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Add((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))
@@ -104,7 +103,7 @@ mod tests {
     #[test]
     fn sub_basic() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("- 5 4"), 0)),
+            parser(lexer::lexer(&String::from("- 5 4"), 0)).unwrap(),
             Expr::Sub((Box::new(Expr::Int(5)), Box::new(Expr::Int(4))))
         )
     }
@@ -112,7 +111,7 @@ mod tests {
     #[test]
     fn sub_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("- 5 - 4 3"), 0)),
+            parser(lexer::lexer(&String::from("- 5 - 4 3"), 0)).unwrap(),
             Expr::Sub((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Sub((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))
@@ -123,7 +122,7 @@ mod tests {
     #[test]
     fn mult_basic() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("* 5 4"), 0)),
+            parser(lexer::lexer(&String::from("* 5 4"), 0)).unwrap(),
             Expr::Mult((Box::new(Expr::Int(5)), Box::new(Expr::Int(4))))
         )
     }
@@ -131,7 +130,7 @@ mod tests {
     #[test]
     fn mult_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("* 5 * 4 3"), 0)),
+            parser(lexer::lexer(&String::from("* 5 * 4 3"), 0)).unwrap(),
             Expr::Mult((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Mult((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))
@@ -142,7 +141,7 @@ mod tests {
     #[test]
     fn div_basic() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("/ 5 4"), 0)),
+            parser(lexer::lexer(&String::from("/ 5 4"), 0)).unwrap(),
             Expr::Div((Box::new(Expr::Int(5)), Box::new(Expr::Int(4))))
         )
     }
@@ -150,7 +149,7 @@ mod tests {
     #[test]
     fn div_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("/ 5 / 4 3"), 0)),
+            parser(lexer::lexer(&String::from("/ 5 / 4 3"), 0)).unwrap(),
             Expr::Div((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Div((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))
@@ -161,7 +160,7 @@ mod tests {
     #[test]
     fn mixed_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("- 5 / 4 3"), 0)),
+            parser(lexer::lexer(&String::from("- 5 / 4 3"), 0)).unwrap(),
             Expr::Sub((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Div((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))

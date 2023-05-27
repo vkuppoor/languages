@@ -35,7 +35,7 @@ mod tests {
     #[test]
     fn add_basic() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("+ 5 4"), 0))),
+            interpreter(parser::parser(lexer::lexer(&String::from("+ 5 4"), 0)).unwrap()),
             9
         )
     }
@@ -43,7 +43,7 @@ mod tests {
     #[test]
     fn add_basic_nested() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("+ 5 + 4 3"), 0))),
+            interpreter(parser::parser(lexer::lexer(&String::from("+ 5 + 4 3"), 0)).unwrap()),
             12
         )
     }
@@ -51,7 +51,7 @@ mod tests {
     #[test]
     fn sub_basic() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("- 5 4"), 0))),
+            interpreter(parser::parser(lexer::lexer(&String::from("- 5 4"), 0)).unwrap()),
             1
         )
     }
@@ -59,7 +59,7 @@ mod tests {
     #[test]
     fn sub_basic_nested() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("- 5 - 4 3"), 0))),
+            interpreter(parser::parser(lexer::lexer(&String::from("- 5 - 4 3"), 0)).unwrap()),
             4
         )
     }
@@ -67,7 +67,7 @@ mod tests {
     #[test]
     fn mult_basic() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("* 5 4"), 0))),
+            interpreter(parser::parser(lexer::lexer(&String::from("* 5 4"), 0)).unwrap()),
             20
         )
     }
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn mult_basic_nested() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("* 5 * 4 3"), 0))),
+            interpreter(parser::parser(lexer::lexer(&String::from("* 5 * 4 3"), 0)).unwrap()),
             60
         )
     }
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn div_basic() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("/ 5 4"), 0))),
+            interpreter(parser::parser(lexer::lexer(&String::from("/ 5 4"), 0)).unwrap()),
             1
         )
     }
@@ -91,10 +91,7 @@ mod tests {
     #[test]
     fn div_basic_nested() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(
-                &String::from("/ 20 / 12 3"),
-                0
-            ))),
+            interpreter(parser::parser(lexer::lexer(&String::from("/ 20 / 12 3"), 0)).unwrap()),
             5
         )
     }
@@ -102,10 +99,7 @@ mod tests {
     #[test]
     fn mixed_basic_nested() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(
-                &String::from("- 10 / 12 3"),
-                0
-            ))),
+            interpreter(parser::parser(lexer::lexer(&String::from("- 10 / 12 3"), 0)).unwrap()),
             6
         )
     }
