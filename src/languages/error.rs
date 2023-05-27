@@ -104,3 +104,45 @@ pub mod parser {
         }
     }
 }
+
+pub mod lexer {
+    use core::result;
+    use std::error::Error as StdError;
+    use std::fmt;
+
+    pub type Result<E, T> = result::Result<E, Error<T>>;
+
+    // T reps a languages tokens; U reps a Vec of a language's tokens
+    pub struct Error<T> {
+        kind: ErrorKind<T>,
+    }
+
+    #[derive(Debug, Clone)]
+    enum ErrorKind<T> {
+        InvalidInput { input: T },
+    }
+
+    impl<T: fmt::Debug> StdError for ErrorKind<T> {}
+
+    impl<T: fmt::Debug> fmt::Display for ErrorKind<T> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match self {
+                ErrorKind::InvalidInput { input } => write!(f, "invalid input: {:?}", input),
+            }
+        }
+    }
+
+    impl<T: fmt::Debug> fmt::Debug for Error<T> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{:?}", self.kind)
+        }
+    }
+
+    impl<T: fmt::Debug + Clone> Error<T> {
+        pub fn invalid_input(input: T) -> Self {
+            Self {
+                kind: ErrorKind::InvalidInput { input },
+            }
+        }
+    }
+}
