@@ -1,36 +1,3 @@
-use core::result;
-use std::fmt;
-
-pub type Result<E, T, U, V> = result::Result<E, Error<T, U, V>>;
-
-pub enum Error<T, U, V> {
-    Lexer(lexer::Error<T>),
-    Parser(parser::Error<U, V>),
-    Interpreter(interpreter::Error), // Assuming interpreter error is a String for now
-}
-
-impl<T: fmt::Display, U: fmt::Display, V: fmt::Display> From<lexer::Error<T>> for Error<T, U, V> {
-    fn from(error: lexer::Error<T>) -> Self {
-        Error::Lexer(error)
-    }
-}
-
-impl<T: fmt::Display, U: fmt::Display, V: fmt::Display> From<parser::Error<U, V>>
-    for Error<T, U, V>
-{
-    fn from(error: parser::Error<U, V>) -> Self {
-        Error::Parser(error)
-    }
-}
-
-impl<T: fmt::Display, U: fmt::Display, V: fmt::Display> From<interpreter::Error>
-    for Error<T, U, V>
-{
-    fn from(error: interpreter::Error) -> Self {
-        Error::Interpreter(error)
-    }
-}
-
 pub mod parser {
     use core::result;
     use std::error::Error as StdError;
