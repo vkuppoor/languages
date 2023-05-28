@@ -1,5 +1,5 @@
+use super::super::error::parser::{Error, Result};
 use super::{Expr, Tok};
-use crate::languages::error::parser::{Error, Result};
 
 /** Grammar:
 E -> + N E | - N E | * N E | / N E | N
@@ -73,18 +73,18 @@ mod tests {
 
     #[test]
     fn nothing() {
-        assert!(parser(lexer::lexer(&String::from(""), 0)).is_err());
+        assert!(parser(lexer::lexer(&String::from(""), 0).unwrap()).is_err());
     }
 
     #[test]
     fn invalid_order() {
-        assert!(parser(lexer::lexer(&String::from("5 + 8 + 9 8"), 0)).is_err());
+        assert!(parser(lexer::lexer(&String::from("5 + 8 + 9 8"), 0).unwrap()).is_err());
     }
 
     #[test]
     fn add_basic() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("+ 5 4"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("+ 5 4"), 0).unwrap()).unwrap(),
             Expr::Add((Box::new(Expr::Int(5)), Box::new(Expr::Int(4))))
         )
     }
@@ -92,7 +92,7 @@ mod tests {
     #[test]
     fn add_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("+ 5 + 4 3"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("+ 5 + 4 3"), 0).unwrap()).unwrap(),
             Expr::Add((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Add((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn sub_basic() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("- 5 4"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("- 5 4"), 0).unwrap()).unwrap(),
             Expr::Sub((Box::new(Expr::Int(5)), Box::new(Expr::Int(4))))
         )
     }
@@ -111,7 +111,7 @@ mod tests {
     #[test]
     fn sub_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("- 5 - 4 3"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("- 5 - 4 3"), 0).unwrap()).unwrap(),
             Expr::Sub((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Sub((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn mult_basic() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("* 5 4"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("* 5 4"), 0).unwrap()).unwrap(),
             Expr::Mult((Box::new(Expr::Int(5)), Box::new(Expr::Int(4))))
         )
     }
@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn mult_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("* 5 * 4 3"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("* 5 * 4 3"), 0).unwrap()).unwrap(),
             Expr::Mult((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Mult((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))
@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn div_basic() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("/ 5 4"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("/ 5 4"), 0).unwrap()).unwrap(),
             Expr::Div((Box::new(Expr::Int(5)), Box::new(Expr::Int(4))))
         )
     }
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn div_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("/ 5 / 4 3"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("/ 5 / 4 3"), 0).unwrap()).unwrap(),
             Expr::Div((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Div((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))
@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn mixed_basic_nested() {
         assert_eq!(
-            parser(lexer::lexer(&String::from("- 5 / 4 3"), 0)).unwrap(),
+            parser(lexer::lexer(&String::from("- 5 / 4 3"), 0).unwrap()).unwrap(),
             Expr::Sub((
                 Box::new(Expr::Int(5)),
                 Box::new(Expr::Div((Box::new(Expr::Int(4)), Box::new(Expr::Int(3)))))

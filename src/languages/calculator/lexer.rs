@@ -1,31 +1,32 @@
+use super::super::error::lexer::{Error, Result};
 use super::Tok;
 use regex::Regex;
 
-pub fn lexer(input: &String, pos: usize) -> Vec<Tok> {
+pub fn lexer(input: &str, pos: usize) -> Result<Vec<Tok>, &str> {
     match (input, pos) {
         (_, pos) if pos >= input.len() => {
             let tokens: Vec<Tok> = Vec::new();
-            tokens
+            Ok(tokens)
         }
         (input, pos) if Regex::new(r"^\+").unwrap().is_match(&input[pos..]) => {
-            let mut tokens: Vec<Tok> = lexer(input, pos + 1);
+            let mut tokens: Vec<Tok> = lexer(input, pos + 1)?;
             tokens.insert(0, Tok::TokAdd);
-            tokens
+            Ok(tokens)
         }
         (input, pos) if Regex::new(r"^\*").unwrap().is_match(&input[pos..]) => {
-            let mut tokens: Vec<Tok> = lexer(input, pos + 1);
+            let mut tokens: Vec<Tok> = lexer(input, pos + 1)?;
             tokens.insert(0, Tok::TokMult);
-            tokens
+            Ok(tokens)
         }
         (input, pos) if Regex::new(r"^\-").unwrap().is_match(&input[pos..]) => {
-            let mut tokens: Vec<Tok> = lexer(input, pos + 1);
+            let mut tokens: Vec<Tok> = lexer(input, pos + 1)?;
             tokens.insert(0, Tok::TokSub);
-            tokens
+            Ok(tokens)
         }
         (input, pos) if Regex::new(r"^\/").unwrap().is_match(&input[pos..]) => {
-            let mut tokens: Vec<Tok> = lexer(input, pos + 1);
+            let mut tokens: Vec<Tok> = lexer(input, pos + 1)?;
             tokens.insert(0, Tok::TokDiv);
-            tokens
+            Ok(tokens)
         }
         _ => {
             let re_whitespace = Regex::new(r"^(\s+)").unwrap();
@@ -33,9 +34,9 @@ pub fn lexer(input: &String, pos: usize) -> Vec<Tok> {
             if let Some(captures) = re_whitespace.captures(&input[pos..]) {
                 if let Some(matched) = captures.get(0) {
                     let matched_str = matched.as_str();
-                    lexer(input, pos + matched_str.len())
+                    Ok(lexer(input, pos + matched_str.len())?)
                 } else {
-                    panic!("invalid token");
+                    Err(Error::invalid_input(input))
                 }
             } else if let Some(captures) = re_numbers.captures(&input[pos..]) {
                 if let Some(matched) = captures.get(0) {
@@ -43,17 +44,17 @@ pub fn lexer(input: &String, pos: usize) -> Vec<Tok> {
 
                     match matched_str.parse::<i32>() {
                         Ok(number) => {
-                            let mut more_tokens = lexer(input, pos + matched_str.len());
+                            let mut more_tokens = lexer(input, pos + matched_str.len())?;
                             more_tokens.insert(0, Tok::TokInt(number));
-                            more_tokens
+                            Ok(more_tokens)
                         }
-                        Err(_) => panic!("invalid number token"),
+                        Err(_) => Err(Error::invalid_input(input)),
                     }
                 } else {
-                    panic!("invalid token");
+                    Err(Error::invalid_input(input))
                 }
             } else {
-                panic!("invalid token");
+                Err(Error::invalid_input(input))
             }
         }
     }
@@ -64,14 +65,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn invalid_tokens() {
+        assert!(lexer(&String::from("^ 9 8"), 0).is_err())
+    }
+
+    #[test]
     fn nothing() {
-        assert_eq!(lexer(&String::from(""), 0), Vec::new());
+        assert_eq!(lexer(&String::from(""), 0).unwrap(), Vec::new());
     }
 
     #[test]
     fn numbers() {
         assert_eq!(
-            lexer(&String::from("5 4 3 11234 9"), 0),
+            lexer(&String::from("5 4 3 11234 9"), 0).unwrap(),
             vec![
                 Tok::TokInt(5),
                 Tok::TokInt(4),
@@ -85,7 +91,7 @@ mod tests {
     #[test]
     fn operators() {
         assert_eq!(
-            lexer(&String::from(" + - + - /* *  -- ++ // **"), 0),
+            lexer(&String::from(" + - + - /* *  -- ++ // **"), 0).unwrap(),
             vec![
                 Tok::TokAdd,
                 Tok::TokSub,
@@ -109,7 +115,7 @@ mod tests {
     #[test]
     fn numbers_operators() {
         assert_eq!(
-            lexer(&String::from("+ 5 * 4 / 30 - 6 3"), 0),
+            lexer(&String::from("+ 5 * 4 / 30 - 6 3"), 0).unwrap(),
             vec![
                 Tok::TokAdd,
                 Tok::TokInt(5),
