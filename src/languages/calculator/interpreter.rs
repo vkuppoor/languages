@@ -1,28 +1,33 @@
+use super::super::error::interpreter::{Error, Result};
 use super::Expr;
 
-pub fn interpreter(ast: Expr) -> i32 {
+pub fn interpreter(ast: Expr) -> Result<i32> {
     match ast {
         Expr::Add((e1, e2)) => {
-            let e1 = interpreter(*e1);
-            let e2 = interpreter(*e2);
-            e1 + e2
+            let e1 = interpreter(*e1)?;
+            let e2 = interpreter(*e2)?;
+            Ok(e1 + e2)
         }
         Expr::Sub((e1, e2)) => {
-            let e1 = interpreter(*e1);
-            let e2 = interpreter(*e2);
-            e1 - e2
+            let e1 = interpreter(*e1)?;
+            let e2 = interpreter(*e2)?;
+            Ok(e1 - e2)
         }
         Expr::Mult((e1, e2)) => {
-            let e1 = interpreter(*e1);
-            let e2 = interpreter(*e2);
-            e1 * e2
+            let e1 = interpreter(*e1)?;
+            let e2 = interpreter(*e2)?;
+            Ok(e1 * e2)
         }
         Expr::Div((e1, e2)) => {
-            let e1 = interpreter(*e1);
-            let e2 = interpreter(*e2);
-            e1 / e2
+            let e1 = interpreter(*e1)?;
+            let e2 = interpreter(*e2)?;
+            if e2 == 0 {
+                Err(Error::div_by_zero())
+            } else {
+                Ok(e1 / e2)
+            }
         }
-        Expr::Int(i) => i,
+        Expr::Int(i) => Ok(i),
     }
 }
 
@@ -35,7 +40,8 @@ mod tests {
     #[test]
     fn add_basic() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("+ 5 4"), 0).unwrap()).unwrap()),
+            interpreter(parser::parser(lexer::lexer(&String::from("+ 5 4"), 0).unwrap()).unwrap())
+                .unwrap(),
             9
         )
     }
@@ -45,7 +51,8 @@ mod tests {
         assert_eq!(
             interpreter(
                 parser::parser(lexer::lexer(&String::from("+ 5 + 4 3"), 0).unwrap()).unwrap()
-            ),
+            )
+            .unwrap(),
             12
         )
     }
@@ -53,7 +60,8 @@ mod tests {
     #[test]
     fn sub_basic() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("- 5 4"), 0).unwrap()).unwrap()),
+            interpreter(parser::parser(lexer::lexer(&String::from("- 5 4"), 0).unwrap()).unwrap())
+                .unwrap(),
             1
         )
     }
@@ -63,7 +71,8 @@ mod tests {
         assert_eq!(
             interpreter(
                 parser::parser(lexer::lexer(&String::from("- 5 - 4 3"), 0).unwrap()).unwrap()
-            ),
+            )
+            .unwrap(),
             4
         )
     }
@@ -71,7 +80,8 @@ mod tests {
     #[test]
     fn mult_basic() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("* 5 4"), 0).unwrap()).unwrap()),
+            interpreter(parser::parser(lexer::lexer(&String::from("* 5 4"), 0).unwrap()).unwrap())
+                .unwrap(),
             20
         )
     }
@@ -81,7 +91,8 @@ mod tests {
         assert_eq!(
             interpreter(
                 parser::parser(lexer::lexer(&String::from("* 5 * 4 3"), 0).unwrap()).unwrap()
-            ),
+            )
+            .unwrap(),
             60
         )
     }
@@ -89,7 +100,8 @@ mod tests {
     #[test]
     fn div_basic() {
         assert_eq!(
-            interpreter(parser::parser(lexer::lexer(&String::from("/ 5 4"), 0).unwrap()).unwrap()),
+            interpreter(parser::parser(lexer::lexer(&String::from("/ 5 4"), 0).unwrap()).unwrap())
+                .unwrap(),
             1
         )
     }
@@ -99,7 +111,8 @@ mod tests {
         assert_eq!(
             interpreter(
                 parser::parser(lexer::lexer(&String::from("/ 20 / 12 3"), 0).unwrap()).unwrap()
-            ),
+            )
+            .unwrap(),
             5
         )
     }
@@ -109,7 +122,8 @@ mod tests {
         assert_eq!(
             interpreter(
                 parser::parser(lexer::lexer(&String::from("- 10 / 12 3"), 0).unwrap()).unwrap()
-            ),
+            )
+            .unwrap(),
             6
         )
     }
