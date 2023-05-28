@@ -46,7 +46,9 @@ pub mod parser {
                     expected_tok, tok_list, actual_tok
                 ),
                 ErrorKind::TokensEmpty => write!(f, "token list is empty"),
-                ErrorKind::TokensNotEmpty { tok_list } => write!(f, "tokens list: {:?}", tok_list),
+                ErrorKind::TokensNotEmpty { tok_list } => {
+                    write!(f, "tokens list is not empty: {:?}", tok_list)
+                }
                 ErrorKind::ProductionRuleFailure {
                     prod_rule,
                     tok_list,
@@ -142,6 +144,55 @@ pub mod lexer {
         pub fn invalid_input(input: T) -> Self {
             Self {
                 kind: ErrorKind::InvalidInput { input },
+            }
+        }
+    }
+}
+
+pub mod interpreter {
+    use core::result;
+    use std::error::Error as StdError;
+    use std::fmt;
+
+    pub type Result<E> = result::Result<E, Error>;
+
+    // T reps a languages tokens; U reps a Vec of a language's tokens
+    pub struct Error {
+        kind: ErrorKind,
+    }
+
+    #[derive(Debug, Clone)]
+    enum ErrorKind {
+        DivByZero,
+        InvalidType(String),
+    }
+
+    impl StdError for ErrorKind {}
+
+    impl fmt::Display for ErrorKind {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match self {
+                ErrorKind::DivByZero => write!(f, "divide by zero"),
+                ErrorKind::InvalidType(type_name) => write!(f, "incorrect type: {:?}", type_name),
+            }
+        }
+    }
+
+    impl fmt::Debug for Error {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{:?}", self.kind)
+        }
+    }
+
+    impl Error {
+        pub fn div_by_zero() -> Self {
+            Self {
+                kind: ErrorKind::DivByZero,
+            }
+        }
+        pub fn invalid_type(type_name: &str) -> Self {
+            Self {
+                kind: ErrorKind::InvalidType(type_name.to_string()),
             }
         }
     }
