@@ -2,7 +2,7 @@ use super::super::error::lexer::{Error, Result};
 use super::Tok;
 use regex::Regex;
 
-pub fn lexer(input: &str, pos: usize) -> Result<Vec<Tok>, &str> {
+pub fn lexer(input: &str, pos: usize) -> Result<Vec<Tok>, String> {
     match (input, pos) {
         (_, pos) if pos >= input.len() => {
             let tokens: Vec<Tok> = Vec::new();
@@ -36,7 +36,7 @@ pub fn lexer(input: &str, pos: usize) -> Result<Vec<Tok>, &str> {
                     let matched_str = matched.as_str();
                     Ok(lexer(input, pos + matched_str.len())?)
                 } else {
-                    Err(Error::invalid_input(input))
+                    Err(Error::invalid_input(input.to_string()))
                 }
             } else if let Some(captures) = re_numbers.captures(&input[pos..]) {
                 if let Some(matched) = captures.get(0) {
@@ -48,13 +48,13 @@ pub fn lexer(input: &str, pos: usize) -> Result<Vec<Tok>, &str> {
                             more_tokens.insert(0, Tok::TokInt(number));
                             Ok(more_tokens)
                         }
-                        Err(_) => Err(Error::invalid_input(input)),
+                        Err(_) => Err(Error::invalid_input(input.to_string())),
                     }
                 } else {
-                    Err(Error::invalid_input(input))
+                    Err(Error::invalid_input(input.to_string()))
                 }
             } else {
-                Err(Error::invalid_input(input))
+                Err(Error::invalid_input(input.to_string()))
             }
         }
     }
